@@ -1,0 +1,14 @@
+/* OBS 24 / Chromium 75: transparent body and legacy rgba syntax. */
+html.overlay-mode, body.overlay-mode { background: transparent; overflow: hidden; }
+/* Keep preview placeholders behind their frame captions. */
+.preview-canvas .frame-label { z-index: 2; }
+.mon { background: rgba(21, 38, 28, var(--panel-opacity, .94)); }
+.empty { background: rgba(17, 31, 22, var(--panel-opacity, .8)); }
+.theme-neon .mon { background: #11122bec; }
+@supports not (color: color-mix(in srgb, white, black)) {
+  .theme-neon .capture-frame, .theme-neon .mon, .theme-neon .alert {
+    box-shadow: 0 0 20px #55edb040;
+  }
+}
+
+.shutdown-control{display:flex;align-items:center;justify-content:space-between;gap:22px}.shutdown-control p{color:#acc0b3;max-width:720px}.shutdown-control .button{color:#ffc2c7;border-color:#87535c;background:#382329;font-size:13px}.shutdown-page{min-height:100vh;display:grid;place-items:center;padding:24px}.shutdown-page .panel{max-width:620px;padding:36px}.shutdown-page p,.shutdown-page small{color:#b5cdbd}.shutdown-page h1{margin-top:24px}@media(max-width:720px){.shutdown-control{align-items:stretch;flex-direction:column}}
