@@ -1,0 +1,50 @@
+const { chromium } = require('playwright');
+const fs=require('node:fs');
+(async()=>{
+  const browser=await chromium.launch({channel:'msedge',headless:true});
+  const page=await browser.newPage({viewport:{width:1512,height:1100}});
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  const remote=[];page.on('request',r=>{if(!r.url().startsWith('http://127.0.0.1:8765')&&!r.url().startsWith('ws://127.0.0.1:8765'))remote.push(r.url())});
+  await page.goto('http://127.0.0.1:8765/dashboard');
+  await page.getByText('Servidor local activo').waitFor();
+  await page.screenshot({path:'data/dashboard.png',fullPage:true});
+  const originalSettings=await (await page.request.get('http://127.0.0.1:8765/api/settings')).json();
+  const originalProfile=(await (await page.request.get('http://127.0.0.1:8765/api/profiles')).json()).default;
+  const failures=[];
+  try {
+    await page.request.put('http://127.0.0.1:8765/api/settings',{data:{...originalSettings,demo:true}});
+    await page.getByText('MODO DEMO · Todos los datos mostrados son ejemplos.').waitFor();
+    await page.getByText('Brote',{exact:true}).first().waitFor();
+    await page.screenshot({path:'data/demo.png',fullPage:true});
+    await page.getByRole('button',{name:'Diseñador',exact:true}).click();
+    await page.locator('label').filter({hasText:/^Tema/}).locator('select').selectOption('neon');
+    await page.getByRole('button',{name:'Guardar cambios',exact:true}).click();
+    await page.getByRole('button',{name:'Guardado',exact:true}).waitFor();
+    const saved=(await (await page.request.get('http://127.0.0.1:8765/api/profiles')).json()).default;
+    if(saved.theme!=='neon')failures.push('Theme not persisted');
+    await page.getByRole('button',{name:'Eventos',exact:true}).click();
+    await page.getByRole('button',{name:'Probar alerta',exact:true}).click();
+    await page.getByText('Alerta enviada a la vista previa y OBS',{exact:true}).waitFor();
+    const history=await (await page.request.get('http://127.0.0.1:8765/api/events')).json();
+    if(history.some(e=>e.metadata.test))failures.push('Test alert persisted');
+  } finally {
+    await page.request.put('http://127.0.0.1:8765/api/settings',{data:originalSettings});
+    await page.request.put('http://127.0.0.1:8765/api/profiles/default',{data:originalProfile});
+  }
+  await page.getByRole('button',{name:'Diseñador',exact:true}).click();
+  await page.getByText('Estilo y composición').waitFor();
+  await page.screenshot({path:'data/designer.png',fullPage:true});
+  await page.goto('http://127.0.0.1:8765/overlay');
+  const bg=await page.locator('body').evaluate(e=>getComputedStyle(e).backgroundColor);
+  const controls=await page.locator('button,input,select,nav').count();
+  await page.screenshot({path:'data/overlay.png',omitBackground:true});
+  await page.setViewportSize({width:390,height:844});
+  await page.goto('http://127.0.0.1:8765/dashboard');
+  await page.screenshot({path:'data/mobile.png',fullPage:true});
+  const horizontalOverflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);
+  const report={errors,failures,remoteRequests:remote,overlayBackground:bg,overlayControls:controls,mobileHorizontalOverflow:horizontalOverflow};
+  fs.writeFileSync('data/browser-check.json',JSON.stringify(report,null,2));
+  console.log(report);
+  await browser.close();
+  if(errors.length||failures.length||remote.length||controls||horizontalOverflow||bg!=='rgba(0, 0, 0, 0)')process.exitCode=1;
+})().catch(e=>{console.error(e);process.exit(1)});

@@ -1,0 +1,14 @@
+Coloca aquí tus ROMs propias en formato .gba (sin ZIP) y reinicia PokeStream.
+
+Español: Esmeralda rev. 0; Rubí y Zafiro rev. 0/1;
+Rojo Fuego y Verde Hoja rev. 0.
+
+Arranque y datos iniciales comprobados con las cinco ROMs aportadas:
+Esmeralda rev. 0, Rubí rev. 1, Zafiro rev. 0, Rojo Fuego y Verde Hoja rev. 0.
+Equipo y combate siguen pendientes de validación completa.
+Rubí rev. 0 y Zafiro rev. 1 solo tienen pruebas sintéticas.
+
+Abre la ROM en mGBA y carga bridge/mgba/pokestream.lua. No necesitas otra
+URL ni otra fuente Navegador de OBS al cambiar de juego.
+
+No se distribuyen ni descargan ROMs. No se modifica tu ROM ni tu partida.
